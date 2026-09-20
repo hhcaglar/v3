@@ -1,0 +1,75 @@
+/* Global stiller — fontlar index.html'de <link> ile yüklenir (JS @import yerine) */
+:root {
+  --paper: #eef1f4;
+  --paper-card: #ffffff;
+  --ink: #1f2a37;
+  --navy: #1e3a5f;
+  --amber: #e3a008;
+  --sage: #3f8f5f;
+  --coral: #d64933;
+  --line: #dce2e8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  width: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: var(--ink);
+}
+
+input,
+select,
+textarea {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  outline: none;
+  padding: 9px 11px;
+  background: #fff;
+  font-size: 13.5px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c7cfd8;
+  border-radius: 8px;
+}
+
+@media (max-width: 760px) {
+  body {
+    overflow-x: hidden;
+  }
+}
