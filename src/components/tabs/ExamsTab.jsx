@@ -1,5 +1,5 @@
 import { Suspense, lazy, useState } from 'react'
-import { TrendingUp, Plus, Trash2 } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, Plus, Trash2 } from 'lucide-react'
 import { Card, Button, SectionHeader, EmptyState } from '../ui.jsx'
 import { ExamModal } from './ExamModal.jsx'
 import { netOf, examNet, formatDate } from '../../lib/utils.js'
@@ -60,8 +60,11 @@ export function ExamsTab({ student, isTeacher, update }) {
           </Card>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {sortedDesc.map((exam) => {
+            {sortedDesc.map((exam, idx) => {
               const net = examNet(exam)
+              const prev = sortedDesc[idx + 1]
+              const prevNet = prev ? examNet(prev) : null
+              const trend = prevNet === null ? null : net > prevNet ? 'up' : net < prevNet ? 'down' : 'flat'
               return (
                 <Card key={exam.id} style={{ padding: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -81,8 +84,16 @@ export function ExamsTab({ student, isTeacher, update }) {
                       <span style={{ fontSize: 13, color: '#6B7684' }}>{formatDate(exam.date)}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontFamily: 'Newsreader, serif', fontSize: 18, fontWeight: 700, color: 'var(--navy)' }}>
-                        {net} net
+                      <span
+                        style={{ display: 'flex', alignItems: 'center', gap: 5 }}
+                        title={prevNet !== null ? `Önceki sınav: ${prevNet} net` : undefined}
+                      >
+                        <span style={{ fontFamily: 'Newsreader, serif', fontSize: 18, fontWeight: 700, color: 'var(--navy)' }}>
+                          {net} net
+                        </span>
+                        {trend === 'up' && <TrendingUp size={16} color="var(--sage)" />}
+                        {trend === 'down' && <TrendingDown size={16} color="var(--coral)" />}
+                        {trend === 'flat' && <Minus size={16} color="#8A94A0" />}
                       </span>
                       {isTeacher && (
                         <button

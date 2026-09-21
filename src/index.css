@@ -148,3 +148,20 @@ button {
 ::selection {
   background: rgba(227, 160, 8, 0.35);
 }
+
+/* ---- Rapor yazdırma (PDF olarak kaydet) ---- */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .dt-print-area,
+  .dt-print-area * {
+    visibility: visible;
+  }
+  .dt-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

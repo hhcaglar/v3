@@ -91,8 +91,11 @@ const body = () => document.getElementById('root').innerHTML
 
 const interact = []
 try {
+  interact.push(['Genel Bakış varsayılan sekme (v3.2)', body().includes('Toplam öğrenci')])
+  interact.push(['Öğrenci kartları + uyarılar (v3.2)', body().includes('Öğrenciyi aç')])
   clickByText('Rapor'); await wait(150)
   interact.push(['Rapor sekmesi açılıyor', body().includes('Veli Raporu')])
+  interact.push(['Yazdır/PDF butonu (v3.2)', body().includes('Yazdır / PDF')])
   interact.push(['Veli kodu gösteriliyor', body().includes('DEMO-2026')])
 
   clickByText('Öneriler'); await wait(150)

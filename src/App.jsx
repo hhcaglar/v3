@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+  LayoutDashboard,
   BookOpen,
   TrendingUp,
   ClipboardList,
@@ -29,6 +30,7 @@ import { HomeworksTab } from './components/tabs/HomeworksTab.jsx'
 import { PlanTab } from './components/tabs/PlanTab.jsx'
 import { TipsTab } from './components/tabs/TipsTab.jsx'
 import { ReportTab } from './components/tabs/ReportTab.jsx'
+import { OverviewTab } from './components/tabs/OverviewTab.jsx'
 
 const SAVE_ERROR_LOCAL = 'Yerel depolamaya kaydedilemedi (gizli pencere veya dolu depolama olabilir).'
 const SAVE_ERROR_CLOUD = 'Sunucuya kaydedilemedi — bağlantını kontrol et.'
@@ -58,6 +60,7 @@ export default function App() {
     isParent,
     parentCode,
     parentLogout,
+    signOut,
   } = useAuth()
 
   const isMobile = useIsMobile()
@@ -65,7 +68,7 @@ export default function App() {
   const [students, setStudents] = useState([])
   const [activeStudentId, setActiveStudentId] = useState(null)
   const [role, setRole] = useState('ogretmen') // yalnızca yerel modda anlam taşır
-  const [tab, setTab] = useState('konular')
+  const [tab, setTab] = useState('genel')
   const [loaded, setLoaded] = useState(false)
   const [loadError, setLoadError] = useState('')
   const [codeParentDoc, setCodeParentDoc] = useState(null) // hesapsız hızlı veli girişi
@@ -291,7 +294,7 @@ export default function App() {
         <TopBar
           subtitle="Veli Görünümü (kod ile)"
           onExit={parentLogout}
-          exitLabel="Çıkış"
+          exitLabel="Çıkış yap"
         />
         <ReadOnlyBody student={codeParentDoc} />
       </Shell>
@@ -304,7 +307,7 @@ export default function App() {
   if (contextKey === 'parent') {
     return (
       <Shell>
-        <TopBar subtitle="Veli Görünümü" onExit={parentLogout} exitLabel="Koddan çık" />
+        <TopBar subtitle="Veli Görünümü" onExit={signOut} exitLabel="Çıkış yap" />
         {activeStudent ? (
           <ReadOnlyBody student={activeStudent} />
         ) : (
@@ -318,6 +321,7 @@ export default function App() {
 
   // ---------------- Öğretmen / yerel ana ekran ----------------
   const tabs = [
+    { id: 'genel', label: 'Genel Bakış', icon: LayoutDashboard },
     { id: 'konular', label: 'Konular', icon: BookOpen },
     { id: 'sinavlar', label: 'Sınavlar', icon: TrendingUp },
     { id: 'odevler', label: 'Ödevler', icon: ClipboardList },
@@ -499,6 +503,15 @@ export default function App() {
                   </Banner>
                 )}
 
+                {tab === 'genel' && (
+                  <OverviewTab
+                    students={students}
+                    onOpenStudent={(id) => {
+                      setActiveStudentId(id)
+                      setTab('konular')
+                    }}
+                  />
+                )}
                 {tab === 'konular' && (
                   <TopicsTab
                     student={activeStudent}
@@ -677,13 +690,14 @@ function CenteredScreen({ children }) {
 // Veli (hesaplı veya kodlu) salt-okunur içerik gövdesi
 function ReadOnlyBody({ student }) {
   const tabs = [
+    { id: 'genel', label: 'Genel Bakış', icon: LayoutDashboard },
     { id: 'konular', label: 'Konular', icon: BookOpen },
     { id: 'sinavlar', label: 'Sınavlar', icon: TrendingUp },
     { id: 'odevler', label: 'Ödevler', icon: ClipboardList },
     { id: 'plan', label: 'Haftalık Plan', icon: CalendarDays },
     { id: 'oneriler', label: 'Öneriler', icon: Lightbulb },
   ]
-  const [tab, setTab] = useState('konular')
+  const [tab, setTab] = useState('genel')
   return (
     <>
       <StudentHeader student={student} isTeacher={false} onRemove={() => {}} />

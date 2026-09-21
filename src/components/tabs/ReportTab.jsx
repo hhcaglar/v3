@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { MessageCircle, Copy, KeyRound, Users } from 'lucide-react'
+import { MessageCircle, Copy, KeyRound, Users, Printer } from 'lucide-react'
 import { Card, Button, SectionHeader, Banner } from '../ui.jsx'
 import { doneTopics, totalTopics, homeworkStats, lastNet, waNumber } from '../../lib/utils.js'
 import { listStudentParents, isCloud } from '../../lib/dataService.js'
@@ -86,6 +86,7 @@ export function ReportTab({ student }) {
   return (
     <div>
       <SectionHeader icon={MessageCircle}>Veli Raporu</SectionHeader>
+      <div className="dt-print-area">
       <Card style={{ maxWidth: 520, display: 'flex', flexDirection: 'column', gap: 12 }}>
         <pre
           style={{
@@ -108,6 +109,9 @@ export function ReportTab({ student }) {
           </Button>
           <Button variant="ghost" icon={Copy} onClick={copy}>
             {copied ? 'Kopyalandı ✓' : 'Metni Kopyala'}
+          </Button>
+          <Button variant="ghost" icon={Printer} onClick={() => window.print()}>
+            Yazdır / PDF
           </Button>
         </div>
 
@@ -143,6 +147,7 @@ export function ReportTab({ student }) {
           </div>
         )}
       </Card>
+      </div>
 
       <LinkedParentsCard studentId={student.id} />
     </div>

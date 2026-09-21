@@ -60,3 +60,19 @@ export const homeworkStats = (student) => {
   const delivered = student.homeworks.filter((h) => h.status === 'teslim').length
   return { total, delivered, percent: total ? Math.round((delivered / total) * 100) : null }
 }
+
+// İsimden baş harfler (örn. "Elif Demir" -> "ED")
+export function initialsOf(name = '') {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (!parts.length) return '?'
+  return parts.slice(0, 2).map((p) => p[0]?.toLocaleUpperCase('tr-TR') || '').join('')
+}
+
+const AVATAR_COLORS = ['#1E3A5F', '#3F8F5F', '#B8860B', '#D64933', '#6B4FA1', '#2C7A9E']
+
+// İsimden deterministik renk (her öğrenci kendi rengine sahip)
+export function avatarColorOf(name = '') {
+  let h = 0
+  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) % 997
+  return AVATAR_COLORS[h % AVATAR_COLORS.length]
+}
