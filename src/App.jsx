@@ -355,9 +355,11 @@ export default function App() {
           >
             <Menu size={17} />
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <GraduationCap size={18} color="var(--amber)" />
-            <span style={{ fontFamily: 'Newsreader, serif', fontSize: 16, fontWeight: 600 }}>DersTakip</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg, #F0B429, #DD9A06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <GraduationCap size={17} color="#1E3A5F" />
+            </div>
+            <span style={{ fontFamily: 'Newsreader, serif', fontSize: 16, fontWeight: 700 }}>DersTakip</span>
           </div>
           {activeStudent && (
             <span
@@ -416,8 +418,8 @@ export default function App() {
               <nav
                 style={{
                   display: 'flex',
-                  gap: 2,
-                  padding: '0 24px',
+                  gap: 6,
+                  padding: '10px 20px 4px',
                   borderBottom: '1px solid var(--line)',
                   overflowX: 'auto',
                 }}
@@ -426,22 +428,22 @@ export default function App() {
                   <button
                     key={id}
                     onClick={() => setTab(id)}
-                    className="dt-side-btn"
+                    className="dt-tabbtn"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 6,
-                      padding: '12px 14px',
+                      gap: 7,
+                      padding: '10px 16px',
                       border: 'none',
-                      background: 'none',
                       cursor: 'pointer',
                       whiteSpace: 'nowrap',
-                      borderBottom: tab === id ? '2px solid var(--navy)' : '2px solid transparent',
-                      color: tab === id ? 'var(--navy)' : '#8A94A0',
+                      background: tab === id ? 'var(--navy)' : undefined,
+                      color: tab === id ? '#fff' : '#6B7684',
                       fontWeight: tab === id ? 700 : 600,
                       fontSize: 13.5,
                       fontFamily: fontSans,
-                      borderRadius: 0,
+                      borderRadius: 9,
+                      boxShadow: tab === id ? '0 3px 10px rgba(30, 58, 95, 0.22)' : 'none',
                     }}
                   >
                     <Icon size={15} /> {label}
@@ -593,9 +595,11 @@ function TopBar({ subtitle, onExit, exitLabel }) {
         gap: 10,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-        <GraduationCap size={20} color="var(--amber)" />
-        <span style={{ fontFamily: 'Newsreader, serif', fontSize: 17, fontWeight: 600 }}>DersTakip</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+        <div style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg, #F0B429, #DD9A06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <GraduationCap size={18} color="#1E3A5F" />
+        </div>
+        <span style={{ fontFamily: 'Newsreader, serif', fontSize: 17, fontWeight: 700 }}>DersTakip</span>
         <span
           style={{
             background: 'rgba(227,160,8,0.2)',
@@ -686,8 +690,8 @@ function ReadOnlyBody({ student }) {
       <nav
         style={{
           display: 'flex',
-          gap: 2,
-          padding: '0 24px',
+          gap: 6,
+          padding: '10px 20px 4px',
           borderBottom: '1px solid var(--line)',
           overflowX: 'auto',
         }}
@@ -696,22 +700,22 @@ function ReadOnlyBody({ student }) {
           <button
             key={id}
             onClick={() => setTab(id)}
-            className="dt-side-btn"
+            className="dt-tabbtn"
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 6,
-              padding: '12px 14px',
+              gap: 7,
+              padding: '10px 16px',
               border: 'none',
-              background: 'none',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
-              borderBottom: tab === id ? '2px solid var(--navy)' : '2px solid transparent',
-              color: tab === id ? 'var(--navy)' : '#8A94A0',
+              background: tab === id ? 'var(--navy)' : undefined,
+              color: tab === id ? '#fff' : '#6B7684',
               fontWeight: tab === id ? 700 : 600,
               fontSize: 13.5,
               fontFamily: fontSans,
-              borderRadius: 0,
+              borderRadius: 9,
+              boxShadow: tab === id ? '0 3px 10px rgba(30, 58, 95, 0.22)' : 'none',
             }}
           >
             <Icon size={15} /> {label}

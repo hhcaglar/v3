@@ -15,6 +15,7 @@ export function StudentHeader({ student, isTeacher, onRemove, onEdit, showPhone 
       style={{
         padding: '20px 24px 16px',
         borderBottom: '1px solid var(--line)',
+        background: 'linear-gradient(180deg, #FFFFFF 0%, #F6F8FA 100%)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
@@ -23,7 +24,7 @@ export function StudentHeader({ student, isTeacher, onRemove, onEdit, showPhone 
       }}
     >
       <div>
-        <h1 style={{ fontFamily: 'Newsreader, serif', fontSize: 24, fontWeight: 700, margin: 0, color: 'var(--ink)' }}>
+        <h1 style={{ fontFamily: 'Newsreader, serif', fontSize: 26, fontWeight: 700, margin: 0, color: 'var(--ink)' }}>
           {student.name}
         </h1>
         <div style={{ fontSize: 13, color: '#6B7684', marginTop: 3, display: 'flex', gap: 10, flexWrap: 'wrap' }}>

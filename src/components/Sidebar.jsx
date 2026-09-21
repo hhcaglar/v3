@@ -36,9 +36,9 @@ export function Sidebar({
   const panel = (
     <aside
       style={{
-        width: 240,
+        width: 248,
         flexShrink: 0,
-        background: 'var(--navy)',
+        background: 'linear-gradient(180deg, #23405F 0%, #16283F 100%)',
         color: '#EAF0F7',
         display: 'flex',
         flexDirection: 'column',
@@ -47,9 +47,23 @@ export function Sidebar({
         overflowY: 'auto',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 4px 18px' }}>
-        <GraduationCap size={22} color="var(--amber)" />
-        <span style={{ fontFamily: 'Newsreader, serif', fontSize: 19, fontWeight: 600, letterSpacing: 0.2 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 4px 18px' }}>
+        <div
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 11,
+            background: 'linear-gradient(135deg, #F0B429, #DD9A06)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(227, 160, 8, 0.35)',
+            flexShrink: 0,
+          }}
+        >
+          <GraduationCap size={21} color="#1E3A5F" />
+        </div>
+        <span style={{ fontFamily: 'Newsreader, serif', fontSize: 20, fontWeight: 700, letterSpacing: 0.2 }}>
           DersTakip
         </span>
       </div>
@@ -77,11 +91,11 @@ export function Sidebar({
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 5,
-                padding: '6px 4px',
-                borderRadius: 6,
+                padding: '8px 4px',
+                borderRadius: 7,
                 border: 'none',
                 cursor: 'pointer',
-                fontSize: 12.5,
+                fontSize: 13,
                 fontWeight: 700,
                 fontFamily: fontSans,
                 background: role === id ? 'var(--amber)' : 'transparent',
@@ -228,15 +242,16 @@ export function Sidebar({
                   alignItems: 'center',
                   gap: 8,
                   textAlign: 'left',
-                  padding: '8px 10px',
+                  padding: '10px 12px',
                   border: 'none',
-                  borderRadius: 8,
+                  borderRadius: 10,
                   cursor: 'pointer',
-                  fontSize: 13.5,
+                  fontSize: 14,
                   fontWeight: 600,
                   fontFamily: fontSans,
-                  background: active ? 'rgba(227,160,8,0.16)' : 'transparent',
+                  background: active ? 'rgba(227,160,8,0.18)' : undefined,
                   color: active ? '#FFE9B8' : '#C9D6E4',
+                  boxShadow: active ? 'inset 3px 0 0 0 var(--amber)' : 'none',
                 }}
               >
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

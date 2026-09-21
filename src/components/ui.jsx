@@ -16,24 +16,43 @@ export function Button({
   const base = {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 6,
-    borderRadius: 8,
+    gap: 8,
+    borderRadius: 10,
     fontFamily: fontSans,
-    fontWeight: 600,
+    fontWeight: 700,
+    letterSpacing: 0.1,
     cursor: disabled ? 'default' : 'pointer',
     border: '1px solid transparent',
-    transition: 'background .15s, transform .05s',
-    opacity: disabled ? 0.5 : 1,
+    transition: 'transform .1s ease, box-shadow .2s ease, filter .15s ease, background .15s',
+    opacity: disabled ? 0.55 : 1,
   }
   const sizes = {
-    sm: { padding: '6px 10px', fontSize: 12.5 },
-    md: { padding: '9px 14px', fontSize: 14 },
+    sm: { padding: '9px 14px', fontSize: 13.5 },
+    md: { padding: '12px 20px', fontSize: 14.5 },
   }
   const variants = {
-    primary: { background: 'var(--navy)', color: '#fff' },
-    accent: { background: 'var(--amber)', color: '#2A1D00' },
-    ghost: { background: 'transparent', color: 'var(--navy)', border: '1px solid var(--line)' },
-    danger: { background: 'transparent', color: 'var(--coral)', border: '1px solid transparent' },
+    primary: {
+      background: 'linear-gradient(135deg, #27496F, #1E3A5F)',
+      color: '#fff',
+      boxShadow: '0 4px 14px rgba(30, 58, 95, 0.28)',
+    },
+    accent: {
+      background: 'linear-gradient(135deg, #F0B429, #E3A008)',
+      color: '#2A1D00',
+      boxShadow: '0 4px 14px rgba(227, 160, 8, 0.32)',
+    },
+    ghost: {
+      background: '#fff',
+      color: 'var(--navy)',
+      border: '1.5px solid var(--line)',
+      boxShadow: '0 1px 3px rgba(30, 58, 95, 0.06)',
+    },
+    danger: {
+      background: '#fff',
+      color: 'var(--coral)',
+      border: '1.5px solid #F3C4BB',
+      boxShadow: '0 1px 3px rgba(214, 73, 51, 0.1)',
+    },
   }
   return (
     <button
@@ -44,7 +63,7 @@ export function Button({
       className="dt-btn"
       style={{ ...base, ...sizes[size], ...variants[variant], ...style }}
     >
-      {Icon && <Icon size={size === 'sm' ? 14 : 16} />}
+      {Icon && <Icon size={size === 'sm' ? 15 : 18} />}
       {children}
     </button>
   )
@@ -67,8 +86,8 @@ export function Card({ children, style }) {
       style={{
         background: 'var(--paper-card)',
         border: '1px solid var(--line)',
-        borderRadius: 12,
-        padding: 18,
+        borderRadius: 16,
+        padding: 20,
         ...style,
       }}
     >
@@ -105,12 +124,12 @@ export function EmptyState({ text }) {
   return (
     <div
       style={{
-        padding: '28px 16px',
+        padding: '30px 18px',
         textAlign: 'center',
         color: '#8A94A0',
-        fontSize: 13.5,
-        border: '1px dashed var(--line)',
-        borderRadius: 10,
+        fontSize: 14,
+        border: '1.5px dashed var(--line)',
+        borderRadius: 12,
       }}
     >
       {text}
@@ -123,19 +142,20 @@ export function StatBox({ label, value, accent }) {
   return (
     <div
       style={{
-        background: 'var(--paper)',
+        background: 'var(--paper-card)',
         border: '1px solid var(--line)',
-        borderRadius: 10,
-        padding: '8px 14px',
-        minWidth: 100,
+        borderRadius: 12,
+        padding: '10px 16px',
+        minWidth: 118,
+        boxShadow: '0 2px 8px rgba(30, 58, 95, 0.06)',
       }}
     >
       <div
         style={{
-          fontSize: 10.5,
+          fontSize: 11,
           color: '#8A94A0',
           fontWeight: 700,
-          letterSpacing: 0.3,
+          letterSpacing: 0.4,
           textTransform: 'uppercase',
         }}
       >
@@ -144,7 +164,7 @@ export function StatBox({ label, value, accent }) {
       <div
         style={{
           fontFamily: 'Newsreader, serif',
-          fontSize: 21,
+          fontSize: 24,
           fontWeight: 700,
           color: accent ? 'var(--amber)' : 'var(--ink)',
         }}
@@ -263,7 +283,7 @@ export function Banner({ tone = 'info', icon: Icon = TriangleAlert, children, st
         gap: 8,
         background: t.bg,
         color: t.fg,
-        borderRadius: 10,
+        borderRadius: 12,
         padding: '10px 14px',
         fontSize: 13,
         lineHeight: 1.45,
