@@ -18,7 +18,10 @@ import { fontSans } from './lib/theme.js'
 import { Sidebar } from './components/Sidebar.jsx'
 import { StudentHeader } from './components/StudentHeader.jsx'
 import { AddStudentModal } from './components/AddStudentModal.jsx'
+import { EditStudentModal } from './components/EditStudentModal.jsx'
+import { SettingsModal } from './components/SettingsModal.jsx'
 import { LoginScreen } from './components/LoginScreen.jsx'
+import { LinkCodeScreen } from './components/LinkCodeScreen.jsx'
 import { Button, EmptyState, Banner, ConfirmDialog } from './components/ui.jsx'
 import { TopicsTab } from './components/tabs/TopicsTab.jsx'
 import { ExamsTab } from './components/tabs/ExamsTab.jsx'
@@ -27,8 +30,7 @@ import { PlanTab } from './components/tabs/PlanTab.jsx'
 import { TipsTab } from './components/tabs/TipsTab.jsx'
 import { ReportTab } from './components/tabs/ReportTab.jsx'
 
-const SAVE_ERROR_LOCAL =
-  'Yerel depolamaya kaydedilemedi (gizli pencere veya dolu depolama olabilir).'
+const SAVE_ERROR_LOCAL = 'Yerel depolamaya kaydedilemedi (gizli pencere veya dolu depolama olabilir).'
 const SAVE_ERROR_CLOUD = 'Sunucuya kaydedilemedi — bağlantını kontrol et.'
 
 function useIsMobile() {
@@ -51,10 +53,11 @@ export default function App() {
     authReady,
     isAuthed,
     isLocalMode,
+    isParentAccount,
+    linkedStudent,
     isParent,
     parentCode,
     parentLogout,
-    session,
   } = useAuth()
 
   const isMobile = useIsMobile()
@@ -65,17 +68,38 @@ export default function App() {
   const [tab, setTab] = useState('konular')
   const [loaded, setLoaded] = useState(false)
   const [loadError, setLoadError] = useState('')
-  const [parentDoc, setParentDoc] = useState(null)
+  const [codeParentDoc, setCodeParentDoc] = useState(null) // hesapsız hızlı veli girişi
   const [saveError, setSaveError] = useState('')
   const [cloudEmpty, setCloudEmpty] = useState(false)
   const [showAddStudent, setShowAddStudent] = useState(false)
-  const [confirmState, setConfirmState] = useState(null) // {title, message, danger, action}
+  const [editStudentOpen, setEditStudentOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [confirmState, setConfirmState] = useState(null)
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const savedDocsRef = useRef(new Map()) // id -> son kaydedilen serileştirilmiş belge
+  const savedDocsRef = useRef(new Map())
 
-  // Hangi veri bağlamındayız? Değişince yeniden yükle.
-  const contextKey = isCloud ? (isParent ? 'parent' : isAuthed ? 'teacher' : 'login') : 'local'
+  // ------------------------------------------------------------
+  // Bağlam: hangi ekrandayız?
+  // local        : Supabase yok → tarayıcı verisi, rol düğmesi
+  // login        : bulut, girişsiz
+  // loading      : bulut, veli hesabı bağlantısı kontrol ediliyor
+  // link         : veli hesabı açık ama erişim kodu bağlı değil
+  // teacher      : öğretmen oturumu (tam yetki)
+  // parent       : veli hesabı (RLS ile kendi çocuğu, salt-okunur)
+  // parent-code  : hesapsız hızlı kod girişi (salt-okunur RPC)
+  // ------------------------------------------------------------
+  const contextKey = !isCloud
+    ? 'local'
+    : !isAuthed
+      ? 'login'
+      : isParentAccount
+        ? linkedStudent === undefined
+          ? 'loading'
+          : linkedStudent
+            ? 'parent'
+            : 'link'
+        : 'teacher'
 
   // ---------------- Veri yükleme ----------------
   useEffect(() => {
@@ -84,55 +108,48 @@ export default function App() {
     setLoadError('')
     setSaveError('')
     setCloudEmpty(false)
-    setParentDoc(null)
+    setCodeParentDoc(null)
     savedDocsRef.current = new Map()
 
     ;(async () => {
       try {
-        if (contextKey === 'login') return
+        if (contextKey === 'login' || contextKey === 'loading' || contextKey === 'link') {
+          if (!cancelled) setLoaded(true)
+          return
+        }
 
-        if (contextKey === 'parent') {
+        if (contextKey === 'parent-code') {
           const doc = await parentFetchStudent(parentCode)
           if (cancelled) return
-          setParentDoc(doc)
+          setCodeParentDoc(doc)
           setLoaded(true)
           return
         }
 
-        if (contextKey === 'teacher') {
-          const list = await backend.loadAll()
-          if (cancelled) return
-          list.forEach((doc) => savedDocsRef.current.set(doc.id, JSON.stringify(doc)))
-          setStudents(list)
-          setActiveStudentId(list[0]?.id ?? null)
-          setCloudEmpty(list.length === 0)
-          setLoaded(true)
-          return
+        // teacher ve parent aynı yolu kullanır: RLS ne görünmesine izin veriyorsa o gelir
+        let list = await backend.loadAll()
+        // Yerel modda ilk çalıştırma: henüz veri yoksa demo tohumla
+        if (contextKey === 'local' && !list) {
+          list = buildDemoData()
+          await localBackend.replaceAll(list)
         }
-
-        // yerel mod
-        const list = await localBackend.loadAll()
         if (cancelled) return
-        let finalList = list
-        if (!finalList) {
-          finalList = buildDemoData()
-          await localBackend.replaceAll(finalList)
-        }
-        finalList.forEach((doc) => savedDocsRef.current.set(doc.id, JSON.stringify(doc)))
-        setStudents(finalList)
+        const safeList = Array.isArray(list) ? list : []
+        safeList.forEach((doc) => savedDocsRef.current.set(doc.id, JSON.stringify(doc)))
+        setStudents(safeList)
         const prefs = loadUiPrefs()
-        const nextRole = prefs.role === 'veli' ? 'veli' : 'ogretmen'
-        setRole(nextRole)
-        const savedActive = finalList.some((s) => s.id === prefs.activeStudentId)
-        setActiveStudentId(savedActive ? prefs.activeStudentId : finalList[0]?.id ?? null)
+        if (contextKey === 'local') {
+          setRole(prefs.role === 'veli' ? 'veli' : 'ogretmen')
+          const savedActive = safeList.some((s) => s.id === prefs.activeStudentId)
+          setActiveStudentId(savedActive ? prefs.activeStudentId : safeList[0]?.id ?? null)
+        } else {
+          setActiveStudentId(safeList[0]?.id ?? null)
+        }
+        setCloudEmpty(safeList.length === 0)
         setLoaded(true)
       } catch (e) {
         if (!cancelled) {
-          setLoadError(
-            isCloud
-              ? `Veriler yüklenemedi: ${e.message ?? e}`
-              : `Yerel veri okunamadı: ${e.message ?? e}`
-          )
+          setLoadError(`Veriler yüklenemedi: ${e?.message ?? e}`)
           setLoaded(true)
         }
       }
@@ -141,20 +158,16 @@ export default function App() {
     return () => {
       cancelled = true
     }
-  }, [contextKey, isCloud, isParent, parentCode])
+  }, [contextKey, parentCode])
 
-  // ---------------- Otomatik kaydetme ----------------
-  const canEdit =
-    isLocalMode ? role === 'ogretmen' : contextKey === 'teacher'
+  // ---------------- Otomatik kaydetme (yalnızca öğretmen/yerel-öğretmen) ----------------
+  const canEdit = isLocalMode ? role === 'ogretmen' : contextKey === 'teacher'
+  const isTeacher = canEdit
 
   const persist = useCallback(async () => {
     if (!isLocalMode && contextKey !== 'teacher') return
-    const dirty = students.filter(
-      (s) => savedDocsRef.current.get(s.id) !== JSON.stringify(s)
-    )
-    const deleted = [...savedDocsRef.current.keys()].filter(
-      (id) => !students.some((s) => s.id === id)
-    )
+    const dirty = students.filter((s) => savedDocsRef.current.get(s.id) !== JSON.stringify(s))
+    const deleted = [...savedDocsRef.current.keys()].filter((id) => !students.some((s) => s.id === id))
     if (!dirty.length && !deleted.length) return
     try {
       for (const doc of dirty) {
@@ -166,8 +179,9 @@ export default function App() {
         savedDocsRef.current.delete(id)
       }
       setSaveError('')
-    } catch {
-      setSaveError(isCloud ? SAVE_ERROR_CLOUD : SAVE_ERROR_LOCAL)
+    } catch (e) {
+      const detail = e?.message ?? e?.error_description ?? ''
+      setSaveError((isCloud ? SAVE_ERROR_CLOUD : SAVE_ERROR_LOCAL) + (detail ? ` (${detail})` : ''))
     }
   }, [students, isLocalMode, contextKey, isCloud])
 
@@ -177,7 +191,6 @@ export default function App() {
     return () => clearTimeout(t)
   }, [students, loaded, canEdit, persist])
 
-  // Yerel modda arayüz tercihlerini sakla
   useEffect(() => {
     if (loaded && isLocalMode) saveUiPrefs({ role, activeStudentId })
   }, [role, activeStudentId, loaded, isLocalMode])
@@ -191,8 +204,6 @@ export default function App() {
     () => students.find((s) => s.id === activeStudentId) || null,
     [students, activeStudentId]
   )
-
-  const isTeacher = isLocalMode ? role === 'ogretmen' : contextKey === 'teacher'
 
   const requestRemoveStudent = (id) => {
     const student = students.find((s) => s.id === id)
@@ -233,8 +244,9 @@ export default function App() {
           setActiveStudentId(demo[0]?.id ?? null)
           setCloudEmpty(false)
           setSaveError('')
-        } catch {
-          setSaveError(isCloud ? SAVE_ERROR_CLOUD : SAVE_ERROR_LOCAL)
+        } catch (e) {
+          const detail = e?.message ?? ''
+          setSaveError((isCloud ? SAVE_ERROR_CLOUD : SAVE_ERROR_LOCAL) + (detail ? ` (${detail})` : ''))
         }
       },
     })
@@ -247,98 +259,54 @@ export default function App() {
     setShowAddStudent(false)
   }
 
-  const retrySave = () => persist()
+  const saveEditedStudent = (fields) => {
+    updateStudent(activeStudentId, (s) => ({ ...s, ...fields }))
+    setEditStudentOpen(false)
+  }
 
   // ---------------- Ekran durumları ----------------
-  if (!supabaseConfigured && !authReady) {
-    return <LoadingScreen />
-  }
-  if (supabaseConfigured && !authReady) {
-    return <LoadingScreen />
-  }
+  if (!authReady || contextKey === 'loading') return <LoadingScreen />
+  if (contextKey === 'login') return <LoginScreen />
+  if (contextKey === 'link') return <LinkCodeScreen />
 
-  if (contextKey === 'login') {
-    return <LoginScreen />
-  }
-
-  // Veli görünümü (bulut): erişim kodu geçersizse hata ekranı
-  if (contextKey === 'parent' && loaded && !parentDoc) {
+  // Hesapsız hızlı veli girişi
+  if (contextKey === 'parent-code') {
+    if (loaded && !codeParentDoc) {
+      return (
+        <CenteredScreen>
+          <GraduationCap size={30} color="var(--amber)" />
+          <h2 style={{ fontFamily: 'Newsreader, serif', margin: '10px 0 6px' }}>Kod geçersiz</h2>
+          <p style={{ fontSize: 13.5, color: '#6B7684', margin: '0 0 16px' }}>
+            Bu erişim koduyla bir öğrenci bulunamadı. Kodu öğretmeninden tekrar kontrol et.
+          </p>
+          <Button variant="ghost" icon={LogOut} onClick={parentLogout}>
+            Kod girişine dön
+          </Button>
+        </CenteredScreen>
+      )
+    }
+    if (!loaded || !codeParentDoc) return <LoadingScreen />
     return (
-      <CenteredScreen>
-        <GraduationCap size={30} color="var(--amber)" />
-        <h2 style={{ fontFamily: 'Newsreader, serif', margin: '10px 0 6px' }}>Kod geçersiz</h2>
-        <p style={{ fontSize: 13.5, color: '#6B7684', margin: '0 0 16px' }}>
-          Bu erişim koduyla bir öğrenci bulunamadı. Kodu öğretmeninden tekrar kontrol et.
-        </p>
-        <Button variant="ghost" icon={LogOut} onClick={parentLogout}>
-          Kod girişine dön
-        </Button>
-      </CenteredScreen>
+      <Shell>
+        <TopBar
+          subtitle="Veli Görünümü (kod ile)"
+          onExit={parentLogout}
+          exitLabel="Çıkış"
+        />
+        <ReadOnlyBody student={codeParentDoc} />
+      </Shell>
     )
   }
 
-  if (!loaded) {
-    return <LoadingScreen />
-  }
+  if (!loaded) return <LoadingScreen />
 
-  // ---------------- Veli görünümü ----------------
+  // ---------------- Veli hesabı görünümü (RLS korumalı) ----------------
   if (contextKey === 'parent') {
-    const student = parentDoc
     return (
       <Shell>
-        <div
-          style={{
-            background: 'var(--navy)',
-            color: '#EAF0F7',
-            padding: '12px 20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 10,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-            <GraduationCap size={20} color="var(--amber)" />
-            <span style={{ fontFamily: 'Newsreader, serif', fontSize: 17, fontWeight: 600 }}>
-              DersTakip
-            </span>
-            <span
-              style={{
-                background: 'rgba(227,160,8,0.2)',
-                color: '#FFE9B8',
-                fontSize: 11,
-                fontWeight: 700,
-                padding: '2px 8px',
-                borderRadius: 999,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Veli Görünümü
-            </span>
-          </div>
-          <button
-            onClick={parentLogout}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              background: 'none',
-              border: '1px solid rgba(255,255,255,0.25)',
-              borderRadius: 6,
-              color: '#C9D6E4',
-              cursor: 'pointer',
-              padding: '5px 10px',
-              fontSize: 12.5,
-              fontFamily: fontSans,
-              flexShrink: 0,
-            }}
-          >
-            <LogOut size={13} /> Çıkış
-          </button>
-        </div>
-
-        {student ? (
-          <ParentBody student={student} />
+        <TopBar subtitle="Veli Görünümü" onExit={parentLogout} exitLabel="Koddan çık" />
+        {activeStudent ? (
+          <ReadOnlyBody student={activeStudent} />
         ) : (
           <div style={{ padding: 24 }}>
             <EmptyState text="Öğrenci verisi bulunamadı." />
@@ -374,6 +342,7 @@ export default function App() {
           <button
             onClick={() => setMenuOpen(true)}
             aria-label="Menüyü aç"
+            className="dt-side-btn"
             style={{
               background: 'none',
               border: '1px solid rgba(255,255,255,0.25)',
@@ -388,12 +357,19 @@ export default function App() {
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <GraduationCap size={18} color="var(--amber)" />
-            <span style={{ fontFamily: 'Newsreader, serif', fontSize: 16, fontWeight: 600 }}>
-              DersTakip
-            </span>
+            <span style={{ fontFamily: 'Newsreader, serif', fontSize: 16, fontWeight: 600 }}>DersTakip</span>
           </div>
           {activeStudent && (
-            <span style={{ fontSize: 13, color: '#C9D6E4', marginLeft: 'auto', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span
+              style={{
+                fontSize: 13,
+                color: '#C9D6E4',
+                marginLeft: 'auto',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
               {activeStudent.name}
             </span>
           )}
@@ -416,6 +392,7 @@ export default function App() {
           onRemoveStudent={requestRemoveStudent}
           onResetDemo={requestResetDemo}
           onRoleChange={setRole}
+          onOpenSettings={() => setSettingsOpen(true)}
         />
 
         <main
@@ -433,6 +410,7 @@ export default function App() {
                 student={activeStudent}
                 isTeacher={isTeacher}
                 onRemove={requestRemoveStudent}
+                onEdit={() => setEditStudentOpen(true)}
               />
 
               <nav
@@ -448,6 +426,7 @@ export default function App() {
                   <button
                     key={id}
                     onClick={() => setTab(id)}
+                    className="dt-side-btn"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -462,6 +441,7 @@ export default function App() {
                       fontWeight: tab === id ? 700 : 600,
                       fontSize: 13.5,
                       fontFamily: fontSans,
+                      borderRadius: 0,
                     }}
                   >
                     <Icon size={15} /> {label}
@@ -500,7 +480,7 @@ export default function App() {
                   <Banner tone="danger" style={{ marginBottom: 16 }}>
                     {saveError}{' '}
                     <button
-                      onClick={retrySave}
+                      onClick={() => persist()}
                       style={{
                         background: 'none',
                         border: 'none',
@@ -557,7 +537,17 @@ export default function App() {
         </main>
       </div>
 
-      {showAddStudent && <AddStudentModal onClose={() => setShowAddStudent(false)} onAdd={addStudent} />}
+      {showAddStudent && (
+        <AddStudentModal onClose={() => setShowAddStudent(false)} onAdd={addStudent} />
+      )}
+      {editStudentOpen && activeStudent && (
+        <EditStudentModal
+          student={activeStudent}
+          onClose={() => setEditStudentOpen(false)}
+          onSave={saveEditedStudent}
+        />
+      )}
+      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
       {confirmState && (
         <ConfirmDialog
           title={confirmState.title}
@@ -586,6 +576,60 @@ function Shell({ children }) {
       }}
     >
       {children}
+    </div>
+  )
+}
+
+function TopBar({ subtitle, onExit, exitLabel }) {
+  return (
+    <div
+      style={{
+        background: 'var(--navy)',
+        color: '#EAF0F7',
+        padding: '12px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 10,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+        <GraduationCap size={20} color="var(--amber)" />
+        <span style={{ fontFamily: 'Newsreader, serif', fontSize: 17, fontWeight: 600 }}>DersTakip</span>
+        <span
+          style={{
+            background: 'rgba(227,160,8,0.2)',
+            color: '#FFE9B8',
+            fontSize: 11,
+            fontWeight: 700,
+            padding: '2px 8px',
+            borderRadius: 999,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {subtitle}
+        </span>
+      </div>
+      <button
+        onClick={onExit}
+        className="dt-side-btn"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          background: 'none',
+          border: '1px solid rgba(255,255,255,0.25)',
+          borderRadius: 6,
+          color: '#C9D6E4',
+          cursor: 'pointer',
+          padding: '5px 10px',
+          fontSize: 12.5,
+          fontFamily: fontSans,
+          flexShrink: 0,
+        }}
+      >
+        <LogOut size={13} /> {exitLabel}
+      </button>
     </div>
   )
 }
@@ -626,7 +670,8 @@ function CenteredScreen({ children }) {
   )
 }
 
-function ParentBody({ student }) {
+// Veli (hesaplı veya kodlu) salt-okunur içerik gövdesi
+function ReadOnlyBody({ student }) {
   const tabs = [
     { id: 'konular', label: 'Konular', icon: BookOpen },
     { id: 'sinavlar', label: 'Sınavlar', icon: TrendingUp },
@@ -651,6 +696,7 @@ function ParentBody({ student }) {
           <button
             key={id}
             onClick={() => setTab(id)}
+            className="dt-side-btn"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -665,6 +711,7 @@ function ParentBody({ student }) {
               fontWeight: tab === id ? 700 : 600,
               fontSize: 13.5,
               fontFamily: fontSans,
+              borderRadius: 0,
             }}
           >
             <Icon size={15} /> {label}

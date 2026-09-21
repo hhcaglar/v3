@@ -1,4 +1,20 @@
-# DersTakip v2 — Öğrenci/Veli Takip Sistemi
+# DersTakip v3 — Öğrenci/Veli Takip Sistemi
+
+
+## v3 yenilikleri
+
+- **Veli kayıt sistemi:** veli artık hesap açabiliyor (ad + e-posta + şifre + öğretmen erişim kodu).
+  Hesap, RLS üzerinden yalnızca kendi çocuğunun verisini salt-okunur görür. Hızlı (hesapsız) kod girişi de hâlâ çalışır.
+- **Öğrenci düzenleme:** öğretmen, ad/sınıf/veli bilgilerini sonradan değiştirebilir (başlıktaki "Düzenle").
+- **Hesap ayarları:** şifre değiştirme, (velide) öğrenci bağlantısını kesme, çıkış — kenar çubuğundaki "Ayarlar".
+- **Öğrenci arama + sayacı** (10+ öğrencide arama kutusu otomatik görünür).
+- **Ödev filtreleri:** Tümü / Bekleyen / Geciken / Teslim.
+- **Bağlı veli hesapları:** Rapor sekmesinde öğrenciye hangi velilerin bağlandığı listelenir.
+- **Görsel cila:** hover efektleri, yumuşak geçişler, yeni giriş ekranı, ikon düğmeleri.
+
+> ⚠️ v3'e geçiş: `supabase/schema.sql` dosyasını Supabase SQL Editor'de **tekrar** çalıştırın
+> (idempotenttir — mevcut verilerinize zarar vermez). Yeni tablo: `parent_users`,
+> yeni fonksiyonlar: `parent_link`, `parent_get_me`, `parent_unlink`, `student_parents`.
 
 React 19 + Vite 8 + Supabase tabanlı öğrenci ders/ödev/sınav takip paneli.
 

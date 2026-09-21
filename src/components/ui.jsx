@@ -41,9 +41,19 @@ export function Button({
       title={title}
       disabled={disabled}
       onClick={onClick}
+      className="dt-btn"
       style={{ ...base, ...sizes[size], ...variants[variant], ...style }}
     >
       {Icon && <Icon size={size === 'sm' ? 14 : 16} />}
+      {children}
+    </button>
+  )
+}
+
+// ---- Filtre çipi ----
+export function Chip({ active, onClick, children }) {
+  return (
+    <button type="button" onClick={onClick} className={`dt-chip${active ? ' dt-chip-active' : ''}`}>
       {children}
     </button>
   )
@@ -53,6 +63,7 @@ export function Button({
 export function Card({ children, style }) {
   return (
     <div
+      className="dt-card-hover"
       style={{
         background: 'var(--paper-card)',
         border: '1px solid var(--line)',

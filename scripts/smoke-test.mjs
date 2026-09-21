@@ -109,6 +109,13 @@ try {
   interact.push(['Veli modunda "Öğrenciyi sil" gizlenir', !body().includes('Öğrenciyi sil')])
   clickByText('Öğretmen'); await wait(150)
   interact.push(['Öğretmen moduna dönüş', body().includes('Öğrenciyi sil')])
+
+  // v3 ekleri
+  interact.push(['Öğrenci düzenle butonu (v3)', body().includes('Düzenle')])
+  clickByText('Ödevler'); await wait(150)
+  interact.push(['Ödev filtre çipleri (v3)', body().includes('Geciken') && body().includes('Bekleyen')])
+  interact.push(['Görsel cila sınıfı dt-btn (v3)', document.querySelector('.dt-btn') !== null])
+  interact.push(['Öğrenci sayacı (v3)', document.body.textContent.includes('ÖĞRENCİLER (2)')])
 } catch (e) {
   interact.push(['Etkileşim akışı hatasız', false])
   console.error('ETKİLEŞİM HATASI:', e.message)

@@ -81,3 +81,38 @@ export function newStudentDoc({ name, grade, parentName, parentPhone }) {
     weeklyPlan: [],
   }
 }
+
+// ------------------------------------------------------------
+// Veli hesabı RPC'leri (schema.sql v3 gerektirir)
+// ------------------------------------------------------------
+
+// Kayıtlı veli: erişim kodunu hesabına bağlar, öğrenci belgesini döner
+export async function parentLink(code) {
+  if (!isCloud) throw new Error('Bu işlem yalnızca bulut modunda yapılabilir.')
+  const { data, error } = await supabase.rpc('parent_link', { p_code: code })
+  if (error) throw error
+  return data
+}
+
+// Kayıtlı veli: bağlı öğrenci (yoksa null)
+export async function parentGetMe() {
+  if (!isCloud) return null
+  const { data, error } = await supabase.rpc('parent_get_me')
+  if (error) throw error
+  return data
+}
+
+// Kayıtlı veli: bağlantıyı kes
+export async function parentUnlink() {
+  if (!isCloud) throw new Error('Bu işlem yalnızca bulut modunda yapılabilir.')
+  const { error } = await supabase.rpc('parent_unlink')
+  if (error) throw error
+}
+
+// Öğretmen: öğrenciye bağlı veli hesapları
+export async function listStudentParents(studentId) {
+  if (!isCloud) return []
+  const { data, error } = await supabase.rpc('student_parents', { p_student: studentId })
+  if (error) throw error
+  return data || []
+}

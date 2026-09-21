@@ -1,7 +1,50 @@
-import { useState } from 'react'
-import { MessageCircle, Copy, KeyRound } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { MessageCircle, Copy, KeyRound, Users } from 'lucide-react'
 import { Card, Button, SectionHeader, Banner } from '../ui.jsx'
 import { doneTopics, totalTopics, homeworkStats, lastNet, waNumber } from '../../lib/utils.js'
+import { listStudentParents, isCloud } from '../../lib/dataService.js'
+
+// Öğretmen: bu öğrenciye bağlanmış veli hesaplarını listeler
+function LinkedParentsCard({ studentId }) {
+  const [parents, setParents] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    listStudentParents(studentId)
+      .then((rows) => !cancelled && setParents(rows))
+      .catch(() => !cancelled && setParents([]))
+    return () => {
+      cancelled = true
+    }
+  }, [studentId])
+
+  if (!isCloud || parents === null) return null
+  return (
+    <Card style={{ maxWidth: 520, marginTop: 12, padding: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8, fontSize: 13, fontWeight: 700 }}>
+        <Users size={15} color="var(--navy)" /> Bağlı veli hesapları
+      </div>
+      {parents.length === 0 ? (
+        <div style={{ fontSize: 12.5, color: '#8A94A0' }}>
+          Henüz veli hesabı bağlanmamış. Veli, erişim koduyla "Veli Kayıt" üzerinden hesap açtığında burada görünür.
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {parents.map((p) => (
+            <div key={p.user_id} style={{ fontSize: 12.5, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+              <span>
+                <b>{p.full_name || 'Veli'}</b> · {p.email}
+              </span>
+              <span style={{ color: '#8A94A0' }}>
+                {new Date(p.linked_at).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  )
+}
 
 export function ReportTab({ student }) {
   const [copied, setCopied] = useState(false)
@@ -100,6 +143,8 @@ export function ReportTab({ student }) {
           </div>
         )}
       </Card>
+
+      <LinkedParentsCard studentId={student.id} />
     </div>
   )
 }

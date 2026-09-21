@@ -73,3 +73,60 @@ button {
     overflow-x: hidden;
   }
 }
+
+/* ---- Etkileşim cilası (v3) ---- */
+.dt-btn {
+  transition: transform 0.05s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.dt-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.dt-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.dt-btn:disabled {
+  cursor: default;
+}
+
+.dt-chip {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.dt-chip:hover {
+  border-color: var(--navy);
+}
+.dt-chip-active,
+.dt-chip-active:hover {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+
+.dt-card-hover {
+  transition: box-shadow 0.15s ease;
+}
+.dt-card-hover:hover {
+  box-shadow: 0 3px 14px rgba(30, 58, 95, 0.08);
+}
+
+.dt-login-bg {
+  background: linear-gradient(160deg, #eef1f4 0%, #dbe4ee 55%, #cfdcec 100%);
+}
+
+.dt-side-btn {
+  transition: background 0.12s ease;
+}
+.dt-side-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+::selection {
+  background: rgba(227, 160, 8, 0.35);
+}

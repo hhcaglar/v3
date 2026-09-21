@@ -1,12 +1,22 @@
 import { useState } from 'react'
 import { ClipboardList, Plus, Trash2 } from 'lucide-react'
-import { Card, Button, SectionHeader, EmptyState, StatusPill } from '../ui.jsx'
+import { Card, Button, SectionHeader, EmptyState, StatusPill, Chip } from '../ui.jsx'
 import { uid, todayISO, formatDate } from '../../lib/utils.js'
+
+const FILTERS = [
+  { id: 'tumu', label: 'Tümü' },
+  { id: 'bekliyor', label: 'Bekleyen' },
+  { id: 'geciken', label: 'Geciken' },
+  { id: 'teslim', label: 'Teslim' },
+]
 
 export function HomeworksTab({ student, isTeacher, update }) {
   const [title, setTitle] = useState('')
   const [subject, setSubject] = useState(student.subjects[0]?.name || '')
   const [dueDate, setDueDate] = useState(todayISO())
+  const [filter, setFilter] = useState('tumu')
+
+  const isOverdue = (hw) => hw.status !== 'teslim' && hw.dueDate < todayISO()
 
   const addHomework = () => {
     const t = title.trim()
@@ -32,15 +42,32 @@ export function HomeworksTab({ student, isTeacher, update }) {
 
   const sorted = student.homeworks.slice().sort((a, b) => a.dueDate.localeCompare(b.dueDate))
 
+  const visible =
+    filter === 'tumu'
+      ? sorted
+      : filter === 'geciken'
+        ? sorted.filter((hw) => isOverdue(hw) || hw.status === 'gecikti')
+        : sorted.filter((hw) => hw.status === filter)
+
   return (
     <div>
       <SectionHeader icon={ClipboardList}>Ödev Yönetimi</SectionHeader>
 
-      {sorted.length === 0 && <EmptyState text="Henüz ödev atanmamış." />}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+        {FILTERS.map((f) => (
+          <Chip key={f.id} active={filter === f.id} onClick={() => setFilter(f.id)}>
+            {f.label}
+          </Chip>
+        ))}
+      </div>
+
+      {visible.length === 0 && (
+        <EmptyState text={filter === 'tumu' ? 'Henüz ödev atanmamış.' : 'Bu filtrede ödev yok.'} />
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-        {sorted.map((hw) => {
-          const overdue = hw.status !== 'teslim' && hw.dueDate < todayISO()
+        {visible.map((hw) => {
+          const overdue = isOverdue(hw)
           return (
             <Card key={hw.id} style={{ padding: 14, borderLeft: overdue ? '3px solid var(--coral)' : undefined }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>

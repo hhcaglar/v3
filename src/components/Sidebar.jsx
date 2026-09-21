@@ -1,4 +1,5 @@
-import { GraduationCap, Plus, RotateCcw, LogOut, PlusCircle, MinusCircle } from 'lucide-react'
+import { useState } from 'react'
+import { GraduationCap, Plus, RotateCcw, LogOut, PlusCircle, MinusCircle, Settings, Search } from 'lucide-react'
 import { fontSans } from '../lib/theme.js'
 import { useAuth } from '../lib/auth.jsx'
 import { Button } from './ui.jsx'
@@ -18,8 +19,19 @@ export function Sidebar({
   onRemoveStudent,
   onResetDemo,
   onRoleChange,
+  onOpenSettings,
 }) {
-  const { isLocalMode, session, signOut } = useAuth()
+  const { isLocalMode, session, signOut, isParentAccount } = useAuth()
+  const [query, setQuery] = useState('')
+
+  const q = query.trim().toLocaleLowerCase('tr-TR')
+  const filtered = q
+    ? students.filter(
+        (s) =>
+          s.name.toLocaleLowerCase('tr-TR').includes(q) ||
+          (s.grade || '').toLocaleLowerCase('tr-TR').includes(q)
+      )
+    : students
 
   const panel = (
     <aside
@@ -42,7 +54,6 @@ export function Sidebar({
         </span>
       </div>
 
-      {/* Rol / mod göstergesi */}
       {isLocalMode ? (
         <div
           style={{
@@ -86,36 +97,64 @@ export function Sidebar({
           style={{
             background: 'rgba(255,255,255,0.08)',
             borderRadius: 8,
-            padding: '7px 10px',
+            padding: '8px 10px',
             marginBottom: 16,
             fontSize: 12,
             color: '#C9D6E4',
             display: 'flex',
             flexDirection: 'column',
-            gap: 6,
+            gap: 8,
           }}
         >
-          <span style={{ fontWeight: 700, color: '#EAF0F7', wordBreak: 'break-all' }}>
-            {session?.user?.email || 'Öğretmen'}
-          </span>
-          <button
-            onClick={signOut}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              background: 'none',
-              border: '1px solid rgba(255,255,255,0.25)',
-              borderRadius: 6,
-              color: '#C9D6E4',
-              cursor: 'pointer',
-              padding: '5px 8px',
-              fontSize: 12,
-              fontFamily: fontSans,
-            }}
-          >
-            <LogOut size={13} /> Çıkış yap
-          </button>
+          <div>
+            <div style={{ fontWeight: 700, color: '#EAF0F7', wordBreak: 'break-all' }}>
+              {session?.user?.email || 'Hesap'}
+            </div>
+            <div style={{ fontSize: 11, color: '#93A5BC', marginTop: 2 }}>
+              {isParentAccount ? 'Veli hesabı' : 'Öğretmen hesabı'}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              onClick={onOpenSettings}
+              className="dt-side-btn"
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 5,
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: 6,
+                color: '#C9D6E4',
+                cursor: 'pointer',
+                padding: '5px 8px',
+                fontSize: 11.5,
+                fontFamily: fontSans,
+              }}
+            >
+              <Settings size={12} /> Ayarlar
+            </button>
+            <button
+              onClick={signOut}
+              title="Çıkış yap"
+              className="dt-side-btn"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: 6,
+                color: '#C9D6E4',
+                cursor: 'pointer',
+                padding: '5px 8px',
+              }}
+            >
+              <LogOut size={12} />
+            </button>
+          </div>
         </div>
       )}
 
@@ -128,42 +167,60 @@ export function Sidebar({
         }}
       >
         <span style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: 0.3, color: '#93A5BC' }}>
-          {isTeacher ? 'ÖĞRENCİLER' : 'ÇOCUĞUNU SEÇ'}
+          {isTeacher ? `ÖĞRENCİLER${students.length ? ` (${students.length})` : ''}` : 'ÇOCUĞUNU SEÇ'}
         </span>
         {isTeacher && (
           <button
             onClick={onAddStudent}
             title="Öğrenci ekle"
-            style={{ background: 'none', border: 'none', color: '#C9D6E4', cursor: 'pointer', padding: 2 }}
+            className="dt-side-btn"
+            style={{ background: 'none', border: 'none', color: '#C9D6E4', cursor: 'pointer', padding: 2, borderRadius: 6 }}
           >
             <Plus size={16} />
           </button>
         )}
       </div>
 
+      {students.length > 5 && isTeacher && (
+        <div style={{ position: 'relative', marginBottom: 8 }}>
+          <Search
+            size={13}
+            style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: '#93A5BC' }}
+          />
+          <input
+            placeholder="Ara (ad/sınıf)…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            style={{
+              width: '100%',
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              color: '#EAF0F7',
+              borderRadius: 7,
+              padding: '6px 8px 6px 26px',
+              fontSize: 12,
+            }}
+          />
+        </div>
+      )}
+
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
         {students.length === 0 && (
-          <div style={{ color: '#93A5BC', fontSize: 12.5, padding: '8px 4px' }}>
-            Henüz öğrenci yok.
-          </div>
+          <div style={{ color: '#93A5BC', fontSize: 12.5, padding: '8px 4px' }}>Henüz öğrenci yok.</div>
         )}
-        {students.map((student) => {
+        {filtered.length === 0 && students.length > 0 && (
+          <div style={{ color: '#93A5BC', fontSize: 12.5, padding: '8px 4px' }}>Eşleşen yok.</div>
+        )}
+        {filtered.map((student) => {
           const active = student.id === activeStudentId
           return (
-            <div
-              key={student.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 4,
-              }}
-            >
+            <div key={student.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
               <button
                 onClick={() => {
                   onSelectStudent(student.id)
                   onCloseMenu?.()
                 }}
+                className="dt-side-btn"
                 style={{
                   flex: 1,
                   display: 'flex',
@@ -194,7 +251,8 @@ export function Sidebar({
                     onRemoveStudent(student.id)
                   }}
                   title="Öğrenciyi sil"
-                  style={{ background: 'none', border: 'none', color: '#7E8FA5', cursor: 'pointer', padding: 3 }}
+                  className="dt-side-btn"
+                  style={{ background: 'none', border: 'none', color: '#7E8FA5', cursor: 'pointer', padding: 3, borderRadius: 6 }}
                 >
                   ×
                 </button>
@@ -207,6 +265,7 @@ export function Sidebar({
       {canEdit && (
         <button
           onClick={onResetDemo}
+          className="dt-side-btn"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -218,6 +277,7 @@ export function Sidebar({
             cursor: 'pointer',
             padding: '4px 2px',
             marginTop: 8,
+            borderRadius: 6,
           }}
         >
           <RotateCcw size={13} /> Örnek verilere sıfırla
@@ -225,23 +285,19 @@ export function Sidebar({
       )}
 
       {saveError && (
-        <div style={{ color: '#F0B4A6', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>
-          {saveError}
-        </div>
+        <div style={{ color: '#F0B4A6', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>{saveError}</div>
       )}
+
+      <div style={{ fontSize: 10.5, color: '#5F7188', marginTop: 10, textAlign: 'center' }}>DersTakip v3</div>
     </aside>
   )
 
   if (!isMobile) return panel
 
-  // Mobil: açılır-kapanır çekmece
   return (
     <>
       {menuOpen && (
-        <div
-          onClick={onCloseMenu}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(20,26,34,0.4)', zIndex: 40 }}
-        />
+        <div onClick={onCloseMenu} style={{ position: 'fixed', inset: 0, background: 'rgba(20,26,34,0.4)', zIndex: 40 }} />
       )}
       <div
         style={{

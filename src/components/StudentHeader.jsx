@@ -1,10 +1,10 @@
-import { Phone, Trash2 } from 'lucide-react'
+import { Phone, Trash2, Pencil } from 'lucide-react'
 import { Button, StatBox } from './ui.jsx'
 import { doneTopics, totalTopics, homeworkStats, lastNet } from '../lib/utils.js'
 
 // Veli telefonu yalnızca yetkili (öğretmen) görünümünde tam gösterilir;
 // bu bileşen zaten yalnızca oturum açılmışken render edilir.
-export function StudentHeader({ student, isTeacher, onRemove, showPhone = true }) {
+export function StudentHeader({ student, isTeacher, onRemove, onEdit, showPhone = true }) {
   const total = totalTopics(student)
   const done = doneTopics(student)
   const hw = homeworkStats(student)
@@ -41,9 +41,14 @@ export function StudentHeader({ student, isTeacher, onRemove, showPhone = true }
         <StatBox label="Ödev tamamlama" value={hw.percent === null ? '-' : `%${hw.percent}`} />
         <StatBox label="Son sınav neti" value={net ?? '-'} accent />
         {isTeacher && (
-          <Button variant="danger" size="sm" icon={Trash2} onClick={() => onRemove(student.id)}>
-            Öğrenciyi sil
-          </Button>
+          <>
+            <Button variant="ghost" size="sm" icon={Pencil} onClick={onEdit} title="Öğrenci bilgilerini düzenle">
+              Düzenle
+            </Button>
+            <Button variant="danger" size="sm" icon={Trash2} onClick={() => onRemove(student.id)}>
+              Öğrenciyi sil
+            </Button>
+          </>
         )}
       </div>
     </div>
